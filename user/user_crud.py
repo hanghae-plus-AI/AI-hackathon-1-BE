@@ -24,4 +24,6 @@ def create_user(new_user: NewUser, db: Session):
     db.add(new_user)
     db.commit()
 
+def verify_password(plain_password, hased_password):
+    return password_context.verify(plain_password, hased_password)
     

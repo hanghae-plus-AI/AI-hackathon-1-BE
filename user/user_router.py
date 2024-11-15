@@ -32,3 +32,24 @@ async def signup(new_user: user_schema.NewUser, db: Session=Depends(get_db)):
         message="회원 가입 완료",
         data=None
     )
+
+
+@app.post(path="/login")
+async def login(login_form: user_schema.LoginFormat = Depends(), db: Session = Depends(get_db)):
+    # 회원인지 확인
+    user = user_crud.get_user(login_form.user_id, db)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="존재하는 id가 아닙니다.")
+    
+    # 로그인
+    varified_user = user_crud.verify_password(login_form.password, user.password)
+    if not varified_user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="올바르지 않은 password입니다.")
+
+    return ResponseSchema(
+        statusCode=200,
+        message="로그인 완료",
+        data={"id": user.id}
+    )
+
+    
