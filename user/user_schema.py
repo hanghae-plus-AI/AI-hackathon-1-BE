@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, model_validator, field_validator
 
 from fastapi import HTTPException
 
@@ -11,10 +11,13 @@ class NewUser(BaseModel):
     job: str
     further_details: str=None
 
-    @field_validator('user_id', 'password', 'name', 'age', 'gender', 'job')
+    @model_validator(mode="before")
     def check_empty(cls, input):
-        if not input or input.isspace():
-            raise HTTPException(status_code=422, detail="필수 항목을 모두 입력해주세요.")
+        required_fields = ['user_id', 'password', 'name', 'age', 'gender', 'job']
+        for field in required_fields:
+            value = input.get(field)
+            if not value:
+                raise HTTPException(status_code=422, detail="필수 항목을 모두 입력해주세요.")
         return input
     
     @field_validator('password')
@@ -25,3 +28,4 @@ class NewUser(BaseModel):
             raise HTTPException(status_code=422, detail="영문을 포함해서 비밀번호를 입력해주세요.")
         if all(char.isalpha() for char in input):
             raise HTTPException(status_code=422, detail="숫자를 포함해서 비밀번호를 입력해주세요.")
+        return input
