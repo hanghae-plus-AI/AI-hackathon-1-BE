@@ -13,6 +13,7 @@ class User(Base):
     name = Column(VARCHAR(10), nullable=False)
     age = Column(Integer, nullable=False)
     gender = Column(VARCHAR(2), nullable=False)
+    work_life_ratio = Column(VARCHAR(10), nullable=False)
     job = Column(VARCHAR(30), nullable=False)
     further_details = Column(VARCHAR(100), nullable=True)
     prefer_task = Column(VARCHAR(100), nullable=True)
