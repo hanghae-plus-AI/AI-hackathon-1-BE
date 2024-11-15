@@ -31,3 +31,7 @@ class NewUser(BaseModel):
             raise HTTPException(status_code=422, detail="숫자를 포함해서 비밀번호를 입력해주세요.")
         return input
     
+
+class LoginFormat(BaseModel):
+    user_id: str
+    password: str
