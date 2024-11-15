@@ -1,1 +1,0 @@
-# AI-hackathon-1-BE
