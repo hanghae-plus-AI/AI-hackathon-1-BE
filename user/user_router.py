@@ -1,13 +1,21 @@
 from sqlalchemy.orm import Session
-from database import get_db
-
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+from typing import Optional, TypeVar, Generic
 
 from user import user_schema, user_crud
+from database import get_db
 
 app = APIRouter(
     prefix="/user"
 )
+
+T = TypeVar('T')
+
+class ResponseSchema(BaseModel, Generic[T]):
+    statusCode: int
+    message: str
+    data: Optional[T] = None
 
 @app.post(path="/signup")
 async def signup(new_user: user_schema.NewUser, db: Session=Depends(get_db)):
@@ -19,4 +27,8 @@ async def signup(new_user: user_schema.NewUser, db: Session=Depends(get_db)):
     # 회원가입
     user_crud.create_user(new_user, db)
 
-    return HTTPException(status_code=status.HTTP_200_OK, detail="회원가입 완료")
+    return ResponseSchema(
+        statusCode=200,
+        message="회원 가입 완료",
+        data=None
+    )
