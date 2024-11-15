@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, VARCHAR, DateTime
+from typing import Optional
+
+from sqlalchemy import Column, Integer, VARCHAR, DateTime, TEXT
 from datetime import datetime
 
 from database import Base
@@ -20,3 +22,28 @@ class User(Base):
     registered_at = Column(DateTime, nullable=False, default=datetime.now)
     modified_at = Column(DateTime, nullable=True)
 
+
+class Task(Base):
+    __tablename__ = "Task"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=False)
+    type = Column(VARCHAR(10), nullable=False)
+    title = Column(VARCHAR(30), nullable=False)
+    body = Column(TEXT, nullable=False)
+    start = Column(DateTime, nullable=True)
+    end = Column(DateTime, nullable=True)
+
+
+class TaskHistory(Base):
+    __tablename__ = "TaskHistory"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    task_id = Column(Integer, nullable=False)
+    type = Column(VARCHAR(10), nullable=False)
+    title = Column(VARCHAR(30), nullable=False)
+    body = Column(TEXT, nullable=False)
+    status = Column(VARCHAR(10), nullable=False)
+    start = Column(DateTime, nullable=True)
+    end = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.now)

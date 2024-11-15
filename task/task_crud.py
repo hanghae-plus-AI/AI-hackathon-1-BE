@@ -2,19 +2,20 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from models import Task, TaskHistory
 
-from task.task_schema import Task as TaskSchema, TaskHistory as TaskHistorySchema
+from task.task_schema import NewTask, NewTaskHistory
 
 def get_task(id: int, db: Session):
-    return db.query(Task).filter(Task.id == id).first()
+    return db.query(Task).filter(NewTask.id == id, NewTask.type == "TASK").first()
 
 def get_subtask(id: int, db: Session):
-    return db.query(Task).filter(Task.id == id, Task.type == "SUBTASK").first()
+    return db.query(NewTask).filter(NewTask.id == id, NewTask.type == "SUBTASK").first()
+
 
 def delete_subtask(id: int, db: Session):
     subtask = get_subtask(id, db)
     if subtask:
         # Create task history record
-        history = TaskHistory(
+        history = NewTaskHistory(
             task_id=id,
             type="NORMAL",
             content=subtask.content,
