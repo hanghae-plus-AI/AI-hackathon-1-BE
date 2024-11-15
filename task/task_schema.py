@@ -27,12 +27,24 @@ class NewTask(BaseModel):
             raise HTTPException(status_code=422, detail="유효하지 않은 타입입니다.")
         return input
 
+
+class CreateTaskReq(BaseModel):
+    type: str
+    title: str
+    body: str
+    start: int
+    end: int
+
+class GetTaskReq(BaseModel):
+    start: int
+    end: int
+
 class NewTask(BaseModel):
     type: str
     title: str
     body: str
-    start: datetime
-    end: datetime
+    start: int
+    end: int
 
 class NewTaskHistory(BaseModel):
     id: int

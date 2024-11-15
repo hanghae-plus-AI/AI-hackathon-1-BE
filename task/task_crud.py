@@ -1,18 +1,35 @@
 from sqlalchemy.orm import Session
 from datetime import datetime
 from models import Task, TaskHistory
+from task import task_schema
 
 from task.task_schema import NewTask, NewTaskHistory
+
 
 def get_task(id: int, db: Session):
     return db.query(Task).filter(NewTask.id == id, NewTask.type == "TASK").first()
 
-def get_subtask(id: int, db: Session):
-    return db.query(NewTask).filter(NewTask.id == id, NewTask.type == "SUBTASK").first()
+
+def get_tasks(start: datetime, end: datetime, db: Session):
+    return db.query(Task).where(Task.start <= start).where(Task.end >= end).all()
 
 
-def delete_subtask(id: int, db: Session):
-    subtask = get_subtask(id, db)
+def create_task(create_task_req: task_schema.CreateTaskReq, user_id: str, db: Session):
+    new_task = Task(
+        user_id=int(user_id),
+        type=create_task_req.type,
+        title=create_task_req.title,
+        body=create_task_req.body,
+        start=datetime.utcfromtimestamp(create_task_req.start),
+        end=datetime.utcfromtimestamp(create_task_req.end)
+    )
+    db.add(new_task)
+    db.commit()
+    return new_task
+
+
+def delete_task(id: int, db: Session):
+    subtask = get_task(id, db)
     if subtask:
         # Create task history record
         history = NewTaskHistory(
@@ -25,7 +42,7 @@ def delete_subtask(id: int, db: Session):
             status="DELETED"
         )
         db.add(history)
-        
+
         # Delete subtask
         db.delete(subtask)
         db.commit()
