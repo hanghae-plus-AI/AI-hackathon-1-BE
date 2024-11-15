@@ -8,12 +8,13 @@ class NewUser(BaseModel):
     name: str
     age: int
     gender: str
+    work_life_ratio: str
     job: str
     further_details: str=None
 
     @model_validator(mode="before")
     def check_empty(cls, input):
-        required_fields = ['user_id', 'password', 'name', 'age', 'gender', 'job']
+        required_fields = ['user_id', 'password', 'name', 'age', 'gender', 'work_life_ratio', 'job']
         for field in required_fields:
             value = input.get(field)
             if not value:

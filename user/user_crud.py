@@ -17,6 +17,7 @@ def create_user(new_user: NewUser, db: Session):
         name=new_user.name,
         age=new_user.age,
         gender=new_user.gender,
+        work_life_ratio=new_user.work_life_ratio,
         job=new_user.job,
         further_details=new_user.further_details
     )
