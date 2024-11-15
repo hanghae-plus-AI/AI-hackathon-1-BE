@@ -35,7 +35,7 @@ async def signup(new_user: user_schema.NewUser, db: Session=Depends(get_db)):
 
 
 @app.post(path="/login")
-async def login(login_form: user_schema.LoginFormat = Depends(), db: Session = Depends(get_db)):
+async def login(login_form: user_schema.LoginFormat, db: Session = Depends(get_db)):
     # 회원인지 확인
     user = user_crud.get_user(login_form.user_id, db)
     if not user:
