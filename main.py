@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import models
 from database import engine
-models.Base.metadata.drop_all(bind=engine)
 models.Base.metadata.create_all(bind=engine)
 
 from user import user_router

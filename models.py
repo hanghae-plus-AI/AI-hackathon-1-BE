@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import Column, Integer, VARCHAR, DateTime, TEXT
+from sqlalchemy import Column, Integer, VARCHAR, DateTime, TEXT, ForeignKey, PrimaryKeyConstraint
 from datetime import datetime
 
 from database import Base
@@ -33,6 +33,18 @@ class Task(Base):
     body = Column(TEXT, nullable=False)
     start = Column(DateTime, nullable=True)
     end = Column(DateTime, nullable=True)
+
+
+class TaskRelation(Base):
+    __tablename__ = "TaskRelation"
+
+    task_id = Column(Integer)
+    sub_task_id = Column(Integer)
+
+    __table_args__ = (
+        PrimaryKeyConstraint(task_id, sub_task_id),
+        {},
+    )
 
 
 class TaskHistory(Base):
