@@ -1,8 +1,21 @@
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
+import os
+from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
+from guidance import user, system, assistant,models,gen
+import io
+import sys
+
+import re
+
+
+from langchain.agents import initialize_agent, Tool
+from langchain_community.tools import DuckDuckGoSearchRun
+import json
+
 
 def generate_subTask(user,task):
-    load_dotenv()
     name = user['name']
     workLifeRatio = user['workLifeRatio']
     job = user['job']
@@ -110,3 +123,79 @@ Requirements:
 #user랑 task 데이터를 따로 아래 처럼 넣었습니다.
 #result = generate_educational_text(parse_data['user'],parse_data['task'])
 #print(result)
+
+
+
+
+
+# data = {
+#     'id': 12,
+#     'workLifeRatio': '70:30',
+#     'age': 29,
+#     'job': '학생',
+#     'gender': '남자',
+#     'furtherDetails': 'ai 교육과정 수강생',
+#     'preferTask': ''
+# }
+
+    
+# input data 예시 는 위와 같은 형식 task = 'kafka공부하기' timing = '저녁'
+def classification_task(data,task,timing):
+    load_dotenv()
+    
+    model_id = 'gpt-4o'
+    
+    llm = ChatOpenAI(model=model_id, temperature=0, max_tokens=1000)
+# Initialize the search tool
+    search = DuckDuckGoSearchRun()
+    tools = [
+        Tool(
+            name="DuckDuckGo Search",
+            func=search.run,
+            description="Useful for searching additional information if given some descriptions."
+        )
+    ]
+
+    # Initialize the language model
+    llm = ChatOpenAI(model=model_id, temperature=0)
+
+    # Initialize the agent
+    agent = initialize_agent(
+        tools=tools,
+        llm=llm,
+        agent="zero-shot-react-description",
+        verbose=True,
+    )
+
+    # Prepare the prompt
+    data_str = "\n".join(f"- {key}: {value}" for key, value in data.items())
+    prompt = f"""
+    Here is a brief description about a person:
+    {data_str}
+
+    Based on the description, provide a persona in few sentences. If it's provided in English, please translate back to Korean. \n
+    You can search for more information, such as passion and personality.
+
+    """
+
+    # Run the agent
+    persona = agent.run(prompt)
+
+    
+    gpt = models.OpenAI(model_id)
+    task = 'kafka공부하기'
+    timing = '저녁'
+    with system():
+        lm = gpt + """유용한 개인 비서입니다. 개인적인 성장은 항상 일에 포함됩니다. 작업을 일 또는 삶으로 분류하고 하위 작업으로 세분화하는 데 매우 능숙합니다. 워라벨에 주의를 기울일 수 있습니다."""
+    with user():
+        llm = lm + f'{persona} 즉 직업, 나이대, 성별 그리고 성격등을 고려하여, 작업을 수행하는 {timing} 시간을 기반으로 {task}을 삶 혹은 일로 분류한 것을 볼드체로 표현해주세요. work인지 life인지만 출력해줘'
+    with assistant():
+        llm+= gen('분류', save_stop_text = True)
+
+    text = str(llm)
+    # Find content between <|im_start|>assistant and <|im_end|>
+    # pattern = r'<\|im_start\|>assistant (.*?)<\|im_end\|>'
+    match = re.findall(r"\*\*(.*?)\*\*", text)
+    if match:
+        return match[0]
+    return match
