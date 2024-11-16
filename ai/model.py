@@ -6,6 +6,8 @@ import io
 import sys
 
 import re
+from langchain_openai import ChatOpenAI
+
 
 from langchain.agents import initialize_agent, Tool
 from langchain_community.tools import DuckDuckGoSearchRun
@@ -203,8 +205,8 @@ def classification_task(data, task, timing):
     persona = agent.run(prompt)
 
     gpt = models.OpenAI(model_id)
-    task = 'kafka공부하기'
-    timing = '저녁'
+    task = task
+    timing = timing
     with system():
         lm = gpt + """유용한 개인 비서입니다. 개인적인 성장은 항상 일에 포함됩니다. 작업을 일 또는 삶으로 분류하고 하위 작업으로 세분화하는 데 매우 능숙합니다. 워라벨에 주의를 기울일 수 있습니다."""
     with user():
@@ -221,7 +223,7 @@ def classification_task(data, task, timing):
     return match
 
 
-# ---------------------
+
 
 
 # hack_json = {
@@ -291,11 +293,13 @@ class DocumentManager:
         sub_tasks = ""
         # Main event document
 
+
+        
         # Sub-task documents
         for sub_task in json_data["subTasks"]:
             sub_tasks += str({
-                "page_content": sub_task["title"],
-                "metadata": {
+                "page_content":sub_task["title"],
+                "metadata":{
                     "id": f"{json_data['id']}",
                     # "task": json_data["title"],
                     "title": sub_task["title"],
@@ -304,7 +308,9 @@ class DocumentManager:
                     "end": datetime.utcfromtimestamp(sub_task["end"]).isoformat(),
                     "category": sub_task["category"]
                 }
-            })
+
+              })
+
             # documents.append(sub_task_doc)
         main_event_doc = Document(
             page_content=json_data["body"] + sub_tasks,
@@ -325,6 +331,7 @@ class DocumentManager:
         documents = self.convert_to_documents(json_data)
         event_id = json_data["id"]
 
+        
         # Generate consistent IDs based on event_id
         doc_ids = [f"{event_id}_main"] + [f"{event_id}_sub_{i}" for i in range(len(json_data["subTasks"]))]
 
@@ -355,4 +362,63 @@ class DocumentManager:
 
 # # Add or update second event
 # doc_manager.add_or_update_documents(hack_json)
+
 #     print(doc_manager.vector_store.as_retriever(search_kwargs={"k": 1}).invoke("AI- 해커톤"))
+
+
+def generate_report(user):
+    # name = user['name']
+    workLifeRatio = user['workLifeRatio']
+    job = user['job']
+    gender = user['gender']
+    furtherDetails = user['furtherDetails']
+    preferTask = user['preferTask'] if len(user['preferTask'])!=0 else "None"
+    age = user['age']
+    WLBscore = user['WLBscore']
+    llm = ChatOpenAI(model="gpt-4o")
+    
+    prompt = prompt = f'''Please evaluate the work-life balance situation for this person based on the following data:
+
+User Profile:
+- Age: {age}
+- Occupation: {job}
+- Additional Information: {furtherDetails}
+
+Work-Life Balance Metrics:
+1. Current WLB Score: {WLBscore}
+   This represents today's work-life balance satisfaction level
+2. Desired Work-Life Ratio: {workLifeRatio}
+   This shows the person's ideal distribution between work and personal life
+
+Please provide:
+1. Analysis of the gap between current WLB score and desired ratio
+2. Personalized recommendations considering:
+   - Age group and career stage
+   - Current occupation and responsibilities
+   - Specific circumstances (if provided)
+3. Practical steps to improve work-life balance
+4. Potential challenges and how to overcome them
+5. Success metrics to track progress
+6. answers in korean
+'''
+    
+    try:
+        response = llm.invoke(prompt)
+        return response.content
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+# dd={
+# 	"user":{
+# 		"id": 12,
+# 		"workLifeRatio":"70:30",
+# 		"age": 29,
+# 		"job": "학생",
+# 		"gender": "남자",
+# 		"furtherDetails": "ai 교육과정 수강생",
+# 		"preferTask":"",
+# 		"WLBscore" : "50%"
+# 	}
+# }
+# generate_subTask(dd['user'])
+
