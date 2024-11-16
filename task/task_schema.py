@@ -44,9 +44,11 @@ class CreateTaskReq(BaseModel):
     start: int
     end: int
 
+
 class GetTaskReq(BaseModel):
     start: int
     end: int
+
 
 class NewTask(BaseModel):
     type: str
@@ -54,6 +56,7 @@ class NewTask(BaseModel):
     body: str
     start: int
     end: int
+
 
 class NewTaskHistory(BaseModel):
     id: int
