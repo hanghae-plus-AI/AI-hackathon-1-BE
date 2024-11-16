@@ -13,6 +13,14 @@ import re
 from langchain.agents import initialize_agent, Tool
 from langchain_community.tools import DuckDuckGoSearchRun
 import json
+from langchain_openai import OpenAIEmbeddings
+from langchain_chroma import Chroma
+import chromadb
+from uuid import uuid4
+from langchain_core.documents import Document
+from datetime import datetime
+import os
+
 
 
 def generate_subTask(user,task):
@@ -199,3 +207,140 @@ def classification_task(data,task,timing):
     if match:
         return match[0]
     return match
+
+#---------------------
+
+
+# hack_json = {
+#   "id": '8',
+#   "title": "AI- 해커톤",
+#   "body": "AI 해커톤에 참가하여 프로젝트를 개발하고 발표 준비를 합니다.",
+#   "start": 1731651166,
+#   "end": 1731658366,
+#   "category": "time",
+#   'classify': 'work',
+#   "subTasks": [
+#     {
+#       "title": "주제 선정 및 팀 구성",
+#       "start": 1731651166,
+#       "end": 1731652366,
+#       "category": "time"
+#     },
+#     {
+#       "title": "AI 모델 설계 및 데이터 수집",
+#       "start": 1731652366,
+#       "end": 1731654766,
+#       "category": "time"
+#     },
+#     {
+#       "title": "AI 모델 개발 및 테스트",
+#       "start": 1731654766,
+#       "end": 1731656966,
+#       "category": "time"
+#     },
+#     {
+#       "title": "발표 자료 준비",
+#       "start": 1731656966,
+#       "end": 1731657966,
+#       "category": "time"
+#     },
+#     {
+#       "title": "발표 리허설",
+#       "start": 1731657966,
+#       "end": 1731658366,
+#       "category": "time"
+#     }
+#   ]
+# }
+
+class DocumentManager:
+    def __init__(self, collection_name="8loMe", persist_directory="./8loMe_chroma_langchain_db"):
+        self.collection_name = collection_name
+        self.persist_directory = persist_directory
+        
+        # Initialize embeddings
+        self.embeddings = OpenAIEmbeddings(
+            model="text-embedding-3-large",
+            dimensions=1024,
+            api_key=os.environ['OPENAI_API_KEY']
+        )
+        
+        # Initialize vector store
+        self.vector_store = Chroma(
+            collection_name=collection_name,
+            embedding_function=self.embeddings,
+            persist_directory=persist_directory
+        )
+        
+    def convert_to_documents(self, json_data):
+        """Convert JSON data to Document objects"""
+        documents = []
+        sub_tasks = ""
+        # Main event document
+
+        
+        # Sub-task documents
+        for sub_task in json_data["subTasks"]:
+            sub_tasks += str({
+                "page_content":sub_task["title"],
+                "metadata":{
+                    "id": f"{json_data['id']}",
+                    # "task": json_data["title"],
+                    "title": sub_task["title"],
+                    # "main_event_title": json_data["title"],
+                    "start": datetime.utcfromtimestamp(sub_task["start"]).isoformat(),
+                    "end": datetime.utcfromtimestamp(sub_task["end"]).isoformat(),
+                    "category": sub_task["category"]
+                }
+              })
+            # documents.append(sub_task_doc)
+        main_event_doc = Document(
+            page_content=json_data["body"] + sub_tasks,
+            metadata={
+                "id": json_data["id"],
+                "title": json_data["title"],
+                "start": datetime.utcfromtimestamp(json_data["start"]).isoformat(),
+                "end": datetime.utcfromtimestamp(json_data["end"]).isoformat(),
+                "category": json_data["category"],
+                'classify': json_data['classify']
+            }
+        )
+        documents.append(main_event_doc)
+        return documents
+    
+    def add_or_update_documents(self, json_data):
+        """Add new documents or update existing ones"""
+        documents = self.convert_to_documents(json_data)
+        event_id = json_data["id"]
+        
+        # Generate consistent IDs based on event_id
+        doc_ids = [f"{event_id}_main"] + [f"{event_id}_sub_{i}" for i in range(len(json_data["subTasks"]))]
+        
+        # Check if documents with these IDs already exist
+        try:
+            # Try to get existing documents
+            existing_docs = self.vector_store.get(ids=doc_ids)
+            if existing_docs and len(existing_docs['ids']) > 0:
+                # Update existing documents
+                self.vector_store.update_documents(documents=documents, ids=doc_ids)
+                print(f"Updated documents for event {event_id}")
+            else:
+                # Add new documents
+                self.vector_store.add_documents(documents=documents, ids=doc_ids)
+                print(f"Added new documents for event {event_id}")
+        except Exception as e:
+            # If there's an error or documents don't exist, add them as new
+            self.vector_store.add_documents(documents=documents, ids=doc_ids)
+            print(f"Added new documents for event {event_id}")
+
+# 사용 예시
+# if __name__ == "__main__":
+#     # Initialize document manager
+# doc_manager = DocumentManager()
+
+# # Add or update first event
+# doc_manager.add_or_update_documents(hack_json)
+
+# # Add or update second event
+# doc_manager.add_or_update_documents(hack_json)
+#     print(doc_manager.vector_store.as_retriever(search_kwargs={"k": 1}).invoke("AI- 해커톤"))
