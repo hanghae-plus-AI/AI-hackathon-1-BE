@@ -28,6 +28,15 @@ class NewTask(BaseModel):
         return input
 
 
+class UpdateTaskReq(BaseModel):
+    id: int
+    type: str
+    title: str
+    body: str
+    start: int
+    end: int
+
+
 class CreateTaskReq(BaseModel):
     type: str
     title: str
@@ -35,9 +44,11 @@ class CreateTaskReq(BaseModel):
     start: int
     end: int
 
+
 class GetTaskReq(BaseModel):
     start: int
     end: int
+
 
 class NewTask(BaseModel):
     type: str
@@ -45,6 +56,7 @@ class NewTask(BaseModel):
     body: str
     start: int
     end: int
+
 
 class NewTaskHistory(BaseModel):
     id: int

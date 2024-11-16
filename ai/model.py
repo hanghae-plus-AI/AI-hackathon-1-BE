@@ -1,14 +1,13 @@
-from langchain_openai import ChatOpenAI
-from dotenv import load_dotenv
 import os
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
-from guidance import user, system, assistant,models,gen
+from guidance import user, system, assistant, models, gen
 import io
 import sys
 
 import re
 from langchain_openai import ChatOpenAI
+
 
 from langchain.agents import initialize_agent, Tool
 from langchain_community.tools import DuckDuckGoSearchRun
@@ -22,24 +21,43 @@ from datetime import datetime
 import os
 
 
+class User:
+    def __init__(self, name, workLifeRatio, job, gender, furtherDetails, preferTask, age):
+        self.name = name
+        self.workLifeRatio = workLifeRatio
+        self.job = job
+        self.gender = gender
+        self.furtherDetails = furtherDetails
+        self.preferTask = preferTask
+        self.age = age
 
-def generate_subTask(user,task):
-    name = user['name']
-    workLifeRatio = user['workLifeRatio']
-    job = user['job']
-    gender = user['gender']
-    furtherDetails = user['furtherDetails']
-    preferTask = user['preferTask'] if len(user['preferTask'])!=0 else "None"
-    age = user['age']
 
-    taskTitle = task['title']
-    taskBody = task['body']
-    startTime = task['start']
-    endTime = task['end']
-    category = task['category']
+class Task:
+    def __init__(self, title, body, start_time, end_time, category):
+        self.title = title
+        self.body = body
+        self.start_time = start_time
+        self.end_time = end_time
+        self.category = category
+
+
+def generate_subTask(user: User, task: Task):
+    name = user.name
+    workLifeRatio = user.workLifeRatio
+    job = user.job
+    gender = user.gender
+    furtherDetails = user.furtherDetails
+    preferTask = user.preferTask
+    age = user.age
+
+    taskTitle = task.title
+    taskBody = task.body
+    startTime = task.start_time
+    endTime = task.end_time
+    category = task.category
 
     llm = ChatOpenAI(model="gpt-4o-mini")
-    
+
     prompt = f"""You are a task planning assistant. Your role is to generate a main task with subtasks based on the following information:
 
 USER PARAMETERS:
@@ -60,7 +78,7 @@ TASK PARAMETERS:
 Please analyze these parameters and create a structured task plan. The time allocation should respect the user's work-life ratio of {workLifeRatio}, and tasks should be appropriate for someone who is a {job}.
 
 Generate output in this exact format when {endTime} is provided:
-"""+"""{
+""" + """{
   "title": "Main task title",
   "body": "Main task description",
   "start": [unix_timestamp],
@@ -100,7 +118,7 @@ Requirements:
 6. tasks should be appropriate for a {job} with background in {furtherDetails}
 7. answer to korean
 """
-    
+
     try:
         response = llm.invoke(prompt)
         return response.content
@@ -122,18 +140,15 @@ Requirements:
 # 	"task":{
 # 			"title": "AI- 해커톤 ",
 # 			"body": "",
-# 			"start": 1731651166, 
+# 			"start": 1731651166,
 # 			"end": 1731658366,
 # 			"category": "time"
 # 	}
 # }"""
 
-#user랑 task 데이터를 따로 아래 처럼 넣었습니다.
-#result = generate_educational_text(parse_data['user'],parse_data['task'])
-#print(result)
-
-
-
+# user랑 task 데이터를 따로 아래 처럼 넣었습니다.
+# result = generate_educational_text(parse_data['user'],parse_data['task'])
+# print(result)
 
 
 # data = {
@@ -146,15 +161,15 @@ Requirements:
 #     'preferTask': ''
 # }
 
-    
+
 # input data 예시 는 위와 같은 형식 task = 'kafka공부하기' timing = '저녁'
-def classification_task(data,task,timing):
+def classification_task(data, task, timing):
     load_dotenv()
-    
+
     model_id = 'gpt-4o'
-    
+
     llm = ChatOpenAI(model=model_id, temperature=0, max_tokens=1000)
-# Initialize the search tool
+    # Initialize the search tool
     search = DuckDuckGoSearchRun()
     tools = [
         Tool(
@@ -189,7 +204,6 @@ def classification_task(data,task,timing):
     # Run the agent
     persona = agent.run(prompt)
 
-    
     gpt = models.OpenAI(model_id)
     task = task
     timing = timing
@@ -198,7 +212,7 @@ def classification_task(data,task,timing):
     with user():
         llm = lm + f'{persona} 즉 직업, 나이대, 성별 그리고 성격등을 고려하여, 작업을 수행하는 {timing} 시간을 기반으로 {task}을 삶 혹은 일로 분류한 것을 볼드체로 표현해주세요. work인지 life인지만 출력해줘'
     with assistant():
-        llm+= gen('분류', save_stop_text = True)
+        llm += gen('분류', save_stop_text=True)
 
     text = str(llm)
     # Find content between <|im_start|>assistant and <|im_end|>
@@ -208,7 +222,8 @@ def classification_task(data,task,timing):
         return match[0]
     return match
 
-#---------------------
+
+
 
 
 # hack_json = {
@@ -257,26 +272,27 @@ class DocumentManager:
     def __init__(self, collection_name="8loMe", persist_directory="./8loMe_chroma_langchain_db"):
         self.collection_name = collection_name
         self.persist_directory = persist_directory
-        
+
         # Initialize embeddings
         self.embeddings = OpenAIEmbeddings(
             model="text-embedding-3-large",
             dimensions=1024,
             api_key=os.environ['OPENAI_API_KEY']
         )
-        
+
         # Initialize vector store
         self.vector_store = Chroma(
             collection_name=collection_name,
             embedding_function=self.embeddings,
             persist_directory=persist_directory
         )
-        
+
     def convert_to_documents(self, json_data):
         """Convert JSON data to Document objects"""
         documents = []
         sub_tasks = ""
         # Main event document
+
 
         
         # Sub-task documents
@@ -292,7 +308,9 @@ class DocumentManager:
                     "end": datetime.utcfromtimestamp(sub_task["end"]).isoformat(),
                     "category": sub_task["category"]
                 }
+
               })
+
             # documents.append(sub_task_doc)
         main_event_doc = Document(
             page_content=json_data["body"] + sub_tasks,
@@ -307,15 +325,16 @@ class DocumentManager:
         )
         documents.append(main_event_doc)
         return documents
-    
+
     def add_or_update_documents(self, json_data):
         """Add new documents or update existing ones"""
         documents = self.convert_to_documents(json_data)
         event_id = json_data["id"]
+
         
         # Generate consistent IDs based on event_id
         doc_ids = [f"{event_id}_main"] + [f"{event_id}_sub_{i}" for i in range(len(json_data["subTasks"]))]
-        
+
         # Check if documents with these IDs already exist
         try:
             # Try to get existing documents
@@ -343,6 +362,7 @@ class DocumentManager:
 
 # # Add or update second event
 # doc_manager.add_or_update_documents(hack_json)
+
 #     print(doc_manager.vector_store.as_retriever(search_kwargs={"k": 1}).invoke("AI- 해커톤"))
 
 
@@ -401,3 +421,4 @@ Please provide:
 # 	}
 # }
 # generate_subTask(dd['user'])
+

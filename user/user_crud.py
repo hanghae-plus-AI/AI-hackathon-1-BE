@@ -7,8 +7,14 @@ from passlib.context import CryptContext
 
 password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 def get_user(user_id: str, db: Session):
     return db.query(User).filter(User.user_id == user_id).first()
+
+
+def get_user_by_autoincrement(id: int, db: Session):
+    return db.query(User).filter(User.id == id).first()
+
 
 def create_user(new_user: NewUser, db: Session):
     new_user = User(
@@ -24,6 +30,6 @@ def create_user(new_user: NewUser, db: Session):
     db.add(new_user)
     db.commit()
 
+
 def verify_password(plain_password, hased_password):
     return password_context.verify(plain_password, hased_password)
-    
