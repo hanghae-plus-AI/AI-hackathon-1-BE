@@ -1,7 +1,17 @@
 # 팀 스파르타 AI-Hackerton-1
 
+# Fast-API + SqlAlchemy + OpenAI API + LangChain +  ChromaDB
+* Fast-API: https://fastapi.tiangolo.com/
+* SqlAlchemy: https://www.sqlalchemy.org/
+* OpenAI API: https://platform.openai.com/docs/overview
+* LangChain: https://www.langchain.com/
+* ChromaDB: https://www.trychroma.com/
+
+
 
 ## 8loMe: 당신의 Task를 SubTask로 세분화하여 캘린더에 자동으로 채워주는 서비스
+
+
 
 
 
