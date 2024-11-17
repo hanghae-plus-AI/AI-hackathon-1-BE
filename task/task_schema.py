@@ -11,21 +11,6 @@ class NewTask(BaseModel):
     start: datetime
     end: Optional[datetime] = None
 
-    @model_validator(mode="before")
-    def check_empty(cls, input):
-        required_fields = ['type', 'content', 'start']
-        for field in required_fields:
-            value = input.get(field)
-            if not value:
-                raise HTTPException(status_code=422, detail="필수 항목을 모두 입력해주세요.")
-        return input
-
-    @field_validator('type')
-    def validate_type(cls, input):
-        valid_types = ['TASK', 'SUBTASK']
-        if input not in valid_types:
-            raise HTTPException(status_code=422, detail="유효하지 않은 타입입니다.")
-        return input
 
 
 class UpdateTaskReq(BaseModel):
@@ -50,12 +35,6 @@ class GetTaskReq(BaseModel):
     end: int
 
 
-class NewTask(BaseModel):
-    type: str
-    title: str
-    body: str
-    start: int
-    end: int
 
 
 class NewTaskHistory(BaseModel):

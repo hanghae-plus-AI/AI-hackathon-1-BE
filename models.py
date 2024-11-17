@@ -30,7 +30,9 @@ class Task(Base):
     user_id = Column(Integer, nullable=False)
     type = Column(VARCHAR(10), nullable=False)
     title = Column(VARCHAR(30), nullable=False)
-    body = Column(TEXT, nullable=False)
+    body = Column(TEXT, nullable=True)
+    classify = Column(VARCHAR(10), nullable=True)
+    category = Column(VARCHAR(10), nullable=True)
     start = Column(DateTime, nullable=True)
     end = Column(DateTime, nullable=True)
 
@@ -50,11 +52,23 @@ class TaskRelation(Base):
 class TaskHistory(Base):
     __tablename__ = "TaskHistory"
 
+    def make_new_task_history_of(self, task: Task):
+        self.task_id = task.id
+        self.type = task.type
+        self.classify = task.classify
+        self.title = task.title
+        self.body = task.body
+        self.status = task.status
+        self.start = task.start
+        self.end = task.end
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     task_id = Column(Integer, nullable=False)
     type = Column(VARCHAR(10), nullable=False)
+    classify = Column(VARCHAR(10), nullable=False)
+    category = Column(VARCHAR(10), nullable=False)
     title = Column(VARCHAR(30), nullable=False)
-    body = Column(TEXT, nullable=False)
+    body = Column(TEXT, nullable=True)
     status = Column(VARCHAR(10), nullable=False)
     start = Column(DateTime, nullable=True)
     end = Column(DateTime, nullable=True)

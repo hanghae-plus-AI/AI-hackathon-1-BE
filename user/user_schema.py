@@ -11,7 +11,7 @@ class NewUser(BaseModel):
     gender: str
     work_life_ratio: str
     job: str
-    further_details: str = None
+    further_details: str
 
     @model_validator(mode="before")
     def check_empty(cls, input):

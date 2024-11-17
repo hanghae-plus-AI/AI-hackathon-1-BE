@@ -53,4 +53,3 @@ async def login(login_form: user_schema.LoginFormat, db: Session = Depends(get_d
         message="로그인 완료",
         data={"id": user.id}
     )
-
