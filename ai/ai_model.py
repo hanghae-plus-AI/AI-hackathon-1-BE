@@ -1,4 +1,6 @@
 import os
+from dataclasses import dataclass
+
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 from guidance import user, system, assistant, models, gen
@@ -17,6 +19,8 @@ from uuid import uuid4
 from langchain_core.documents import Document
 from datetime import datetime
 import os
+
+from pydantic import BaseModel
 
 
 class User:
@@ -54,7 +58,7 @@ def generate_subTask(user: User, task: Task):
     endTime = task.end_time
     category = task.category
 
-    llm = ChatOpenAI(model="gpt-4o-mini")
+    # llm = ChatOpenAI(model="gpt-4o-mini")
 
     prompt = f"""You are a task planning assistant. Your role is to generate a main task with subtasks based on the following information:
 
@@ -118,8 +122,50 @@ Requirements:
 """
 
     try:
-        response = llm.invoke(prompt)
-        return response.content
+        # response = llm.invoke(prompt)
+        # return response.content
+        return json.loads("""
+            {
+                "title": "AI- 해커톤",
+                "body": "AI 해커톤에 참가하여 프로젝트를 개발하고 발표 준비를 합니다.",
+                "start": 1731651166,
+                "end": 1731658366,
+                "category": "time",
+                "classify": "work",
+                "subTasks": [
+                    {
+                        "title": "주제 선정 및 팀 구성",
+                        "start": 1731651166,
+                        "end": 1731652366,
+                        "category": "time"
+                    },
+                    {
+                        "title": "AI 모델 설계 및 데이터 수집",
+                        "start": 1731652366,
+                        "end": 1731654766,
+                        "category": "time"
+                    },
+                    {
+                        "title": "AI 모델 개발 및 테스트",
+                        "start": 1731654766,
+                        "end": 1731656966,
+                        "category": "time"
+                    },
+                    {
+                        "title": "발표 자료 준비",
+                        "start": 1731656966,
+                        "end": 1731657966,
+                        "category": "time"
+                    },
+                    {
+                        "title": "발표 리허설",
+                        "start": 1731657966,
+                        "end": 1731658366,
+                        "category": "time"
+                    }
+                ]
+            }"""
+                          )
     except Exception as e:
         return f"Error: {str(e)}"
 
@@ -345,6 +391,7 @@ class DocumentManager:
             self.vector_store.add_documents(documents=documents, ids=doc_ids)
             print(f"Added new documents for event {event_id}")
 
+
 # 사용 예시
 # if __name__ == "__main__":
 #     # Initialize document manager
@@ -356,3 +403,22 @@ class DocumentManager:
 # # Add or update second event
 # doc_manager.add_or_update_documents(hack_json)
 #     print(doc_manager.vector_store.as_retriever(search_kwargs={"k": 1}).invoke("AI- 해커톤"))
+
+
+@dataclass
+class AiSubTask(BaseModel):
+    title: str
+    body: str
+    start: int
+    category: str
+
+
+@dataclass
+class AiTask(BaseModel):
+    title: str
+    body: str
+    start: int
+    end: int
+    category: str
+    classify: str
+    subTasks: list[AiSubTask]
